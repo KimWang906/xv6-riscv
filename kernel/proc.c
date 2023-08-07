@@ -622,6 +622,62 @@ killed(struct proc *p)
   return k;
 }
 
+int 
+setpgid(int pid, int pgid) 
+{
+  // Current Process Struct
+  struct proc *cp = myproc();
+  // Target Process Struct
+  struct proc *p;
+
+  if(!pid)
+  {
+    acquire(&cp->lock);
+    pid = cp->pid;
+    release(&cp->lock);
+  }
+
+  if(!pgid)
+  {
+    acquire(&cp->lock);
+    pgid = pid;
+    release(&cp->lock);
+  }
+
+  if(pgid < 0)
+  {
+    return -1;
+  }
+  
+  for(p = proc; p < &proc[NPROC]; p++){
+    acquire(&p->lock);
+    if (p->pid == pid)
+    {
+      p->pgid = pgid;
+      release(&p->lock);
+      return 0;
+    }
+    release(&p->lock);
+  }
+
+  return -1;
+}
+
+int 
+getpgid(int pid)
+{
+  struct proc *p;
+
+  for(p = proc; p < &proc[NPROC]; p++){
+    if (p->pid == pid)
+    {
+      return p->pgid;
+    }
+  }
+
+  return -1;
+}
+
 // Copy to either a user address, or kernel address,
 // depending on usr_dst.
 // Returns 0 on success, -1 on error.
@@ -677,7 +733,7 @@ procdump(void)
       state = states[p->state];
     else
       state = "???";
-    printf("%d %s %s", p->pid, state, p->name);
+    printf("%d %d %s %s", p->pid, p->pgid, state, p->name);
     printf("\n");
   }
 }

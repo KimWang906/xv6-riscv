@@ -89,3 +89,22 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+// The pid of the process group leader is set to pgid.
+// Runs the process group leader for the first time when it is created. 
+uint64
+sys_setpgid(void)
+{
+  int pid, pgid;
+  argint(0, &pid);
+  argint(1, &pgid);
+  return setpgid(pid, pgid);
+}
+
+uint64
+sys_getpgid(void)
+{
+  int pid;
+  argint(0, &pid);
+  return getpgid(pid);
+}
